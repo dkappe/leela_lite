@@ -1,0 +1,4 @@
+-e git+https://github.com/dkappe/lczero_tools.git@a90a3cc56ed654ba298eb9183c026191780102ed#egg=lczero_tools
+numpy==1.15.3
+python-chess==0.23.9
+torch==0.4.1
