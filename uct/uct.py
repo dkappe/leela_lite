@@ -52,17 +52,14 @@ class UCTNode():
     
     def backup(self, value_estimate: float):
         current = self
-        while current.parent is not None:
-            if chess.WHITE == current.board.turn:
-                turnfactor = 1
-            else:
-                turnfactor = -1
-            #print("value: ", value_estimate)
-            #print("turnfactor: ", turnfactor)
+        # Child nodes are multiplied by -1 because we want max(-opponent eval)
+        turnfactor = -1
+        while current.parent is not None:            
             current.number_visits += 1
             current.total_value += (value_estimate *
                                     turnfactor)
             current = current.parent
+            turnfactor *= -1
         current.number_visits += 1
 
     def dump(self, move, C):
@@ -87,10 +84,11 @@ def UCT_search(board, num_reads, net=None, C=1.0):
         leaf.expand(child_priors)
         leaf.backup(value_estimate)
 
-    for m, node in root.children.items():
+    for m, node in sorted(root.children.items(),
+                          key=lambda item: (item[1].number_visits, item[1].Q())):
         node.dump(m, C)
     return max(root.children.items(),
-               key=lambda item: item[1].number_visits)
+               key=lambda item: (item[1].number_visits, item[1].Q()))
 
 
 class NeuralNet:
@@ -101,20 +99,26 @@ class NeuralNet:
         self.net = net
 
     def evaluate(self, board):
-        if board.pc_board.is_game_over(claim_draw=True):
-            result = board.pc_board.result(claim_draw=True)
-            print("Result is {}".format(repr(result)))
-            if chess.WHITE == board.turn:
-                turnfactor = 1.0
-            else:
-                turnfactor = -1.0
-            if result == "1-0":
-                return dict(), turnfactor
-            elif result == "0-1":
-                return dict(), -turnfactor
-            else:
+        result = None
+        
+        if board.pc_board.is_game_over():
+            result = board.pc_board.result()
+        
+        # Check for threefold or fifty move rule
+        # Don't use python-chess method, because threefold checks if next move can
+        # be threefold as well
+        if board.is_draw():
+            result = "1/2-1/2"
+            
+        if result:
+            if result == "1/2-1/2":
                 return dict(), 0.0
+            else:
+                # Always return -1.0 when checkmated
+                return dict(), -1.0
+            
         policy, value = self.net.evaluate(board)
+        
         value2 = (2.0*value)-1.0
         #print("value: ", value)
         #print("value2: ", value2)
