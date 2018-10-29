@@ -11,6 +11,6 @@ Very simple PUCT to experiment with leela networks in Python.
 
 ## What it needs
 
-- Non hacky clone of LeelaBoard so it doesn't run so darn slow
-- UCI interface
+- [x] Non hacky clone of LeelaBoard so it doesn't run so darn slow
+- [ ] UCI interface
 - TBD
