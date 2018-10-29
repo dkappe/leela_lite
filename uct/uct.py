@@ -46,10 +46,7 @@ class UCTNode():
             child, parent=self, prior=prior)
 
     def build_child(self, move):
-        board = LeelaBoard()
-        for i in self.board.uci_moves:
-            board.push_uci(i)
-
+        board = self.board.copy()
         board.push_uci(move)
         return board
     
