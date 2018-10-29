@@ -84,9 +84,9 @@ def UCT_search(board, num_reads, net=None, C=1.0):
         leaf.expand(child_priors)
         leaf.backup(value_estimate)
 
-    for m, node in sorted(root.children.items(),
-                          key=lambda item: (item[1].number_visits, item[1].Q())):
-        node.dump(m, C)
+    #for m, node in sorted(root.children.items(),
+    #                      key=lambda item: (item[1].number_visits, item[1].Q())):
+    #    node.dump(m, C)
     return max(root.children.items(),
                key=lambda item: (item[1].number_visits, item[1].Q()))
 
