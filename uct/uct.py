@@ -97,6 +97,23 @@ class NeuralNet:
         super().__init__()
         assert(net != None)
         self.net = net
+        self.nncache = {}
+
+    def cache_evaluate(self, board):
+        # naive nn cache with epd key
+        epd = board.pc_board.epd()
+        result = self.nncache.get(epd, None)
+        policy = None
+        value = None
+        if result == None:
+            policy, value = self.net.evaluate(board)
+            self.nncache[epd] = [policy, value]
+        else:
+            # cache hit
+            policy = result[0]
+            value = result[1]
+
+        return policy, value
 
     def evaluate(self, board):
         result = None
@@ -117,7 +134,7 @@ class NeuralNet:
                 # Always return -1.0 when checkmated
                 return dict(), -1.0
             
-        policy, value = self.net.evaluate(board)
+        policy, value = self.cache_evaluate(board)
         
         value2 = (2.0*value)-1.0
         #print("value: ", value)
