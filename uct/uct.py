@@ -4,7 +4,7 @@ import lcztools
 from lcztools import LeelaBoard
 import chess
 from collections import OrderedDict
-from uct.util import temp_softmax
+# from uct.util import temp_softmax
 
 
 
@@ -31,7 +31,7 @@ class UCTNode():
 
     def select_leaf(self, C):
         current = self
-        while current.is_expanded:
+        while current.is_expanded and current.children:
             current = current.best_child(C)
         return current
 
@@ -101,9 +101,10 @@ class NeuralNet:
         self.net = net
 
     def evaluate(self, board):
-        if board.pc_board.is_game_over():
-            result = board.pc_board.result()
-            if chess.WHITE == self.board.turn:
+        if board.pc_board.is_game_over(claim_draw=True):
+            result = board.pc_board.result(claim_draw=True)
+            print("Result is {}".format(repr(result)))
+            if chess.WHITE == board.turn:
                 turnfactor = 1.0
             else:
                 turnfactor = -1.0
@@ -117,9 +118,9 @@ class NeuralNet:
         value2 = (2.0*value)-1.0
         #print("value: ", value)
         #print("value2: ", value2)
-        sm = temp_softmax(policy.values(), sm=2.2)
-        for i, k in enumerate(policy):
-            policy[k] = sm[i]
+        #sm = temp_softmax(policy.values(), sm=2.2)
+        #for i, k in enumerate(policy):
+        #    policy[k] = sm[i]
         return policy, value2
 
 

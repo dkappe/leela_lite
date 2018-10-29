@@ -15,7 +15,7 @@ else:
 
 board = LeelaBoard()
 
-net = load_network(backend='pytorch_cuda', filename=weights)
+net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
 nn = uct.NeuralNet(net=net)
 #policy, value = net.evaluate(board)
 #print(policy)
@@ -23,13 +23,18 @@ nn = uct.NeuralNet(net=net)
 #print(uct.softmax(policy.values()))
 
 while True:
-    print(board)
-    line = sys.stdin.readline()
-    line = line.rstrip()
-    board.push_uci(line)
+    #print(board)
+    # line = sys.stdin.readline()
+    # line = line.rstrip()
+    # board.push_uci(line)
     print(board)
     print("thinking...")
     best, node = uct.UCT_search(board, nodes, net=nn, C=3.4)
     print("best: ", best)
     board.push_uci(best)
+    if board.pc_board.is_game_over(claim_draw=True):
+        print("Game over... result is {}".format(board.pc_board.result(claim_draw=True)))
+        print(board)
+        print(chess.pgn.Game.from_board(board.pc_board))
+        break
 
