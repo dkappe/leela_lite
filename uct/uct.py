@@ -4,22 +4,23 @@ import lcztools
 from lcztools import LeelaBoard
 import chess
 from collections import OrderedDict
-# from uct.util import temp_softmax
-
-
 
 class UCTNode():
-    def __init__(self, board, parent=None, prior=0):
+    def __init__(self, board=None, parent=None, move=None, prior=0):
         self.board = board
+        self.move = move
         self.is_expanded = False
         self.parent = parent  # Optional[UCTNode]
         self.children = OrderedDict()  # Dict[move, UCTNode]
         self.prior = prior  # float
         self.total_value = 0  # float
         self.number_visits = 0  # int
-
+        
     def Q(self):  # returns float
-        return self.total_value / (1 + self.number_visits)
+        if not self.number_visits:
+            return 0 # FPU reduction, parent value like lc0???
+        else:
+            return self.total_value / self.number_visits
 
     def U(self):  # returns float
         return (math.sqrt(self.parent.number_visits)
@@ -33,6 +34,9 @@ class UCTNode():
         current = self
         while current.is_expanded and current.children:
             current = current.best_child(C)
+        if not current.board:
+            current.board = current.parent.board.copy()
+            current.board.push_uci(current.move)
         return current
 
     def expand(self, child_priors):
@@ -41,14 +45,7 @@ class UCTNode():
             self.add_child(move, prior)
 
     def add_child(self, move, prior):
-        child = self.build_child(move)
-        self.children[move] = UCTNode(
-            child, parent=self, prior=prior)
-
-    def build_child(self, move):
-        board = self.board.copy()
-        board.push_uci(move)
-        return board
+        self.children[move] = UCTNode(parent=self, move=move, prior=prior)
     
     def backup(self, value_estimate: float):
         current = self
@@ -103,12 +100,12 @@ class NeuralNet:
         
         if board.pc_board.is_game_over():
             result = board.pc_board.result()
-        
-        # Check for threefold or fifty move rule
-        # Don't use python-chess method, because threefold checks if next move can
-        # be threefold as well
-        if board.is_draw():
+        elif board.is_draw():
+            # board.is_draw checks for threefold or fifty move rule
+            # Don't use python-chess method, because threefold checks if next move can
+            # be threefold as well            
             result = "1/2-1/2"
+        
             
         if result:
             if result == "1/2-1/2":
