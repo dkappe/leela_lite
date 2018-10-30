@@ -1,3 +1,4 @@
+
 import numpy as np
 import math
 import lcztools
@@ -80,7 +81,7 @@ def UCT_search(board, num_reads, net=None, C=1.0):
     root = UCTNode(board)
     for _ in range(num_reads):
         leaf = root.select_leaf(C)
-        child_priors, value_estimate = net.evaluate(leaf.board)
+        child_priors, value_estimate, u = net.evaluate(leaf.board)
         leaf.expand(child_priors)
         leaf.backup(value_estimate)
 
@@ -88,7 +89,7 @@ def UCT_search(board, num_reads, net=None, C=1.0):
     #                      key=lambda item: (item[1].number_visits, item[1].Q())):
     #    node.dump(m, C)
     return max(root.children.items(),
-               key=lambda item: (item[1].number_visits, item[1].Q()))
+               key=lambda item: (item[1].number_visits, .5*(item[1].Q()+1)))
 
 
 class NeuralNet:
@@ -112,10 +113,10 @@ class NeuralNet:
             
         if result:
             if result == "1/2-1/2":
-                return dict(), 0.0
+                return dict(), 0.0, 0.
             else:
                 # Always return -1.0 when checkmated
-                return dict(), -1.0
+                return dict(), -1.0, 0.
             
         policy, value = self.net.evaluate(board)
         
@@ -125,7 +126,7 @@ class NeuralNet:
         #sm = temp_softmax(policy.values(), sm=2.2)
         #for i, k in enumerate(policy):
         #    policy[k] = sm[i]
-        return policy, value2
+        return policy, value2, .15
 
 
 
