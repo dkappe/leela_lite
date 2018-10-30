@@ -4,6 +4,7 @@ import lcztools
 from lcztools import LeelaBoard
 import chess
 from collections import OrderedDict
+import functools
 
 class UCTNode():
     def __init__(self, board=None, parent=None, move=None, prior=0):
@@ -90,10 +91,11 @@ def UCT_search(board, num_reads, net=None, C=1.0):
 
 class NeuralNet:
 
-    def __init__(self, net=None):
+    def __init__(self, net=None, lru_size=5000):
         super().__init__()
         assert(net != None)
         self.net = net
+        self.evaluate = functools.lru_cache(maxsize=lru_size)(self.evaluate)
 
     def evaluate(self, board):
         result = None

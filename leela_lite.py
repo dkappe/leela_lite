@@ -3,6 +3,8 @@ import uct
 import chess
 import chess.pgn
 import sys
+import time
+
 
 if len(sys.argv) != 3:
     print("Usage: python3 leela_lite.py <weights file> <nodes>")
@@ -35,8 +37,12 @@ while True:
         board.push_uci(line)
     print(board)
     print("thinking...")
+    start = time.time()
     best, node = uct.UCT_search(board, nodes, net=nn, C=3.4)
+    elapsed = time.time() - start
     print("best: ", best)
+    print("Time: {:.3f} nps".format(nodes/elapsed))
+    print(nn.evaluate.cache_info())
     board.push_uci(best)
     if board.pc_board.is_game_over() or board.is_draw():
         print("Game over... result is {}".format(board.pc_board.result(claim_draw=True)))
