@@ -15,7 +15,7 @@ else:
 
 board = LeelaBoard()
 
-net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
+net = load_network(filename=weights, policy_softmax_temp=2.2)
 nn = search.NeuralNet(net=net)
 #policy, value = net.evaluate(board)
 #print(policy)
