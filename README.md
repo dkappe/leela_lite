@@ -80,6 +80,6 @@ Turn: Black
 ## What it needs
 
 - [x] Non hacky clone of LeelaBoard so it doesn't run so darn slow
-- [ ] UCI interface
+- [X] UCI interface
 - [ ] Noise for variety
 - TBD
