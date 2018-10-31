@@ -1,8 +1,11 @@
+#!/usr/bin/python3
 from lcztools import load_network, LeelaBoard
 import search
 import chess
 import chess.pgn
 import sys
+import time
+
 
 if len(sys.argv) != 3:
     print("Usage: python3 leela_lite.py <weights file> <nodes>")
@@ -34,12 +37,12 @@ while True:
         board.push_uci(line)
     print(board)
     print("thinking...")
-    best, node = search.BRUE_search(board, nodes, net=nn)
-    print("best: ", best, 'eval', node.Q())
-    board.push_uci(best)
-    
-    best, node = search.UCT_search(board, nodes, net=nn)
-    print("best: ", best, 'eval', node.Q())
+    start = time.time()
+    best, node = search.UCT_search(board, nodes, net=nn, C=3.4)
+    elapsed = time.time() - start
+    print("best: ", best)
+    print("Time: {:.3f} nps".format(nodes/elapsed))
+    print(nn.evaluate.cache_info())
     board.push_uci(best)
     if board.pc_board.is_game_over() or board.is_draw():
         print("Game over... result is {}".format(board.pc_board.result(claim_draw=True)))

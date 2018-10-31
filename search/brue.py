@@ -70,7 +70,7 @@ def BRUE_search(board, num_reads, net=None, C=1.0):
     assert(net != None)
     root = BRUENode(board)
     for n in range(num_reads):
-        switchingPoint = n%10
+        switchingPoint = n%40
         #print('run ', n, 'switch ', switchingPoint)
         level = 0
         current = root

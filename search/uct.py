@@ -1,17 +1,15 @@
-
 import numpy as np
 import math
 import lcztools
 from lcztools import LeelaBoard
 import chess
 from collections import OrderedDict
-# from uct.util import temp_softmax
-
 
 
 class UCTNode():
-    def __init__(self, board, parent=None, prior=0):
+    def __init__(self, board=None, parent=None, move=None, prior=0):
         self.board = board
+        self.move = move
         self.is_expanded = False
         self.parent = parent  # Optional[UCTNode]
         self.children = OrderedDict()  # Dict[move, UCTNode]
@@ -34,6 +32,9 @@ class UCTNode():
         current = self
         while current.is_expanded and current.children:
             current = current.best_child(C)
+        if not current.board:
+            current.board = current.parent.board.copy()
+            current.board.push_uci(current.move)
         return current
 
     def expand(self, child_priors):
@@ -42,14 +43,7 @@ class UCTNode():
             self.add_child(move, prior)
 
     def add_child(self, move, prior):
-        child = self.build_child(move)
-        self.children[move] = UCTNode(
-            child, parent=self, prior=prior)
-
-    def build_child(self, move):
-        board = self.board.copy()
-        board.push_uci(move)
-        return board
+        self.children[move] = UCTNode(parent=self, move=move, prior=prior)
     
     def backup(self, value_estimate: float):
         current = self
@@ -81,7 +75,7 @@ def UCT_search(board, num_reads, net=None, C=1.0):
     root = UCTNode(board)
     for _ in range(num_reads):
         leaf = root.select_leaf(C)
-        child_priors, value_estimate, u = net.evaluate(leaf.board)
+        child_priors, value_estimate = net.evaluate(leaf.board)
         leaf.expand(child_priors)
         leaf.backup(value_estimate)
 
@@ -89,44 +83,7 @@ def UCT_search(board, num_reads, net=None, C=1.0):
     #                      key=lambda item: (item[1].number_visits, item[1].Q())):
     #    node.dump(m, C)
     return max(root.children.items(),
-               key=lambda item: (item[1].number_visits, .5*(item[1].Q()+1)))
-
-
-class NeuralNet:
-
-    def __init__(self, net=None):
-        super().__init__()
-        assert(net != None)
-        self.net = net
-
-    def evaluate(self, board):
-        result = None
-        
-        if board.pc_board.is_game_over():
-            result = board.pc_board.result()
-        
-        # Check for threefold or fifty move rule
-        # Don't use python-chess method, because threefold checks if next move can
-        # be threefold as well
-        if board.is_draw():
-            result = "1/2-1/2"
-            
-        if result:
-            if result == "1/2-1/2":
-                return dict(), 0.0, 0.
-            else:
-                # Always return -1.0 when checkmated
-                return dict(), -1.0, 0.
-            
-        policy, value = self.net.evaluate(board)
-        
-        value2 = (2.0*value)-1.0
-        #print("value: ", value)
-        #print("value2: ", value2)
-        #sm = temp_softmax(policy.values(), sm=2.2)
-        #for i, k in enumerate(policy):
-        #    policy[k] = sm[i]
-        return policy, value2, .15
+               key=lambda item: (item[1].number_visits, item[1].Q()))
 
 
 
