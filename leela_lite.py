@@ -1,5 +1,6 @@
+#!/usr/bin/python3
 from lcztools import load_network, LeelaBoard
-import uct
+import search
 import chess
 import chess.pgn
 import sys
@@ -19,7 +20,7 @@ board = LeelaBoard()
 
 net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
 # net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=1.0)
-nn = uct.NeuralNet(net=net)
+nn = search.NeuralNet(net=net)
 #policy, value = net.evaluate(board)
 #print(policy)
 #print(value)
@@ -38,7 +39,7 @@ while True:
     print(board)
     print("thinking...")
     start = time.time()
-    best, node = uct.UCT_search(board, nodes, net=nn, C=3.4)
+    best, node = search.UCT_search(board, nodes, net=nn, C=3.4)
     elapsed = time.time() - start
     print("best: ", best)
     print("Time: {:.3f} nps".format(nodes/elapsed))
