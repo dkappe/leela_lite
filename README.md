@@ -2,6 +2,14 @@
 
 Very simple PUCT to experiment with leela networks in Python.
 
+## New UCI
+
+LeelaLite now has a very lightweight uci interface. The `leelalite.sh` shell script is a wrapper around `engine.py`. The engine ignores arguments to `go`. It just runs a search at whatever nodes were specified as an argument to the python script.
+
+You'll have to change the paths in `leelalite.sh` to reflect your installation. See the next section for installation instructions.
+
+Also, there's a LRU nn eval cache (thanks @Trevor) and lazy instantiation that make leela_lite run a whole lot faster.
+
 ## Quickstart
 
 - setup a python virtual environment with python3
