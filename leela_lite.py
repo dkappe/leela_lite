@@ -34,7 +34,7 @@ while True:
         board.push_uci(line)
     print(board)
     print("thinking...")
-    best, node = search.BRUE_search(board, nodes, net=nn)
+    best, node = search.CRAZY_search(board, nodes, net=nn)
     print("best: ", best, 'eval', node.Q())
     board.push_uci(best)
     
