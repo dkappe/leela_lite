@@ -1,5 +1,5 @@
 from lcztools import load_network, LeelaBoard
-import uct
+import search
 import chess
 import chess.pgn
 import sys
@@ -10,11 +10,11 @@ weights = sys.argv[1]
 board = LeelaBoard()
 
 net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
-nn = uct.NeuralNet(net=net)
+nn = search.NeuralNet(net=net)
 NODES = 10000
 
 def do_nn():
-    best, node = uct.UCT_search(board, NODES, net=net, C=3.4)
+    best, node = search.UCT_search(board, NODES, net=net, C=3.4)
 
 start = datetime.datetime.now()
 do_nn()
