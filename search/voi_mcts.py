@@ -25,6 +25,10 @@ class VOINode:
         return self.total_value / (1 + self.number_visits)
 
     def best_child(self):
+        """
+        Take care here: bear in mind that the rewards in the paper are in the region [0, 1]
+        :return: best child
+        """
         if len(self.children) < 2:
             return (list(self.children.values()))[0]
 
@@ -32,16 +36,19 @@ class VOINode:
                                      self.children.values(),
                                      key=lambda node: node.Q()
                                      )
-        voi = {}
+        result = None
+        voi_max = -1
         for n in self.children.values():
-            voi[n] = n.prior / (1. + n.number_visits)
+            voi = n.prior / (1. + n.number_visits)
             if n == alpha:
-                voi[n] *= beta.Q() * math.exp(-2 * (n.Q() - beta.Q()) * n.number_visits)
+                voi *= (1 + beta.Q()) * math.exp(-0.5 * alpha.number_visits * (alpha.Q() - beta.Q()) ** 2)
             else:
-                voi[n] *= (1 - n.Q()) * math.exp(-2 * (n.Q() - alpha.Q()) * n.number_visits)
+                voi *= (1 - alpha.Q()) * math.exp(-0.5 * n.number_visits * (alpha.Q() - n.Q()) ** 2)
+            if voi > voi_max:
+                voi_max = voi
+                result = n
 
-        return max(self.children.values(),
-                   key=lambda n: voi[n])
+        return result
 
     def select_leaf(self):
         current = self
@@ -81,6 +88,7 @@ class VOINode:
         print("Q: ", self.Q())
         print("---")
 
+
 def VOI_search(board, num_reads, net=None):
     assert(net is not None)
     root = VOINode(board)
@@ -90,5 +98,8 @@ def VOI_search(board, num_reads, net=None):
         leaf.expand(child_priors)
         leaf.backup(value_estimate)
 
+    pv = sorted(root.children.items(), key=lambda item: (item[1].Q(), item[1].number_visits), reverse=True)
+
+    print('pv:', [(n[0], n[1].Q(), n[1].number_visits) for n in pv])
     return max(root.children.items(),
                key=lambda item: (item[1].Q(), item[1].number_visits))
