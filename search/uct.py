@@ -26,7 +26,7 @@ class UCTNode():
         return (math.sqrt(self.parent.number_visits)
                 * self.prior / (1 + self.number_visits))
 
-    def best_child(self, C):
+    def best_child(self, C):  # returns child node with maximal Q+c*U
         return max(self.children.values(),
                    key=lambda node: node.Q() + C*node.U())
 
