@@ -26,9 +26,9 @@ except:
 def load_leela_network():
     global net, nn
     if network_id is not None:
-        net = load_network(backend='net_client', network_id=network_id)
+        net = load_network(backend='net_client', network_id=network_id, policy_softmax_temp=2.2)
     else:
-        net = load_network(backend='pytorch_cuda', filename=weights)
+        net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
     nn = search.NeuralNet(net=net, lru_size=min(5000, nodes))
     
 
