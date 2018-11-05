@@ -41,17 +41,34 @@ def process_position(tokens):
     return board
 
 if len(sys.argv) != 3:
-    print("Usage: python3 engine.py <weights file> <nodes>")
+    print("Usage: python3 leela_lite.py <weights file or network server ID> <nodes>")
     print(len(sys.argv))
     exit(1)
 else:
     weights = sys.argv[1]
     nodes = int(sys.argv[2])
 
+network_id = None
+try:
+    # If the parameter is an integer, assume it's a network server ID
+    network_id = int(weights)
+    weights = None
+except:
+    pass
+
+def load_leela_network():
+    global net, nn
+    if network_id is not None:
+        net = load_network(backend='net_client', network_id=network_id)
+    else:
+        net = load_network(backend='pytorch_cuda', filename=weights)
+    nn = search.NeuralNet(net=net)
+
+
 send("Leela Lite")
 board = LeelaBoard()
 net = None
-mm = None
+nn = None
 
 
 
@@ -71,8 +88,7 @@ while True:
     elif tokens[0] == "quit":
         exit(0)
     elif tokens[0] == "isready":
-        net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
-        nn = search.NeuralNet(net=net)
+        load_leela_network()
         send("readyok")
     elif tokens[0] == "ucinewgame":
         board = LeelaBoard()
@@ -80,8 +96,7 @@ while True:
         board = process_position(tokens)
     elif tokens[0] == 'go':
         if nn == None:
-            net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
-            nn = search.NeuralNet(net=net)
+            load_leela_network()
         best, node = search.UCT_search(board, nodes, net=nn, C=3.4)
         send("bestmove {}".format(best))
 
