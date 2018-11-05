@@ -41,7 +41,7 @@ def process_position(tokens):
     return board
 
 if len(sys.argv) != 3:
-    print("Usage: python3 leela_lite.py <weights file or network server ID> <nodes>")
+    print("Usage: python3 engine.py <weights file or network server ID> <nodes>")
     print(len(sys.argv))
     exit(1)
 else:
