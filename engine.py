@@ -83,7 +83,6 @@ while True:
     if tokens[0] == "uci":
         send('id name Leela Lite')
         send('id author Dietrich Kappe')
-        send('option name List of Syzygy tablebase directories type string default')
         send('uciok')
     elif tokens[0] == "quit":
         exit(0)
@@ -95,9 +94,12 @@ while True:
     elif tokens[0] == 'position':
         board = process_position(tokens)
     elif tokens[0] == 'go':
+        my_nodes = nodes
+        if (len(tokens) == 3) and (tokens[1] == 'nodes'):
+            my_nodes = int(tokens[2])
         if nn == None:
             load_leela_network()
-        best, node = search.UCT_search(board, nodes, net=nn, C=3.4)
+        best, node = search.UCT_search(board, my_nodes, net=nn, C=3.4)
         send("bestmove {}".format(best))
 
 logfile.close()

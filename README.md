@@ -4,17 +4,26 @@ Very simple PUCT to experiment with leela networks in Python.
 
 ## New UCI
 
-LeelaLite now has a very lightweight uci interface. The `leelalite.sh` shell script is a wrapper around `engine.py`. The engine ignores arguments to `go`. It just runs a search at whatever nodes were specified as an argument to the python script.
+LeelaLite now has a very lightweight uci interface. The `leelalite.sh` shell script is a wrapper around
+`engine.py`. The engine ignores arguments to `go`, except the `nodes` parameter, in which case it will
+search the specified number of nodes. It just runs a search at whatever nodes were specified as an
+argument to the python script.
 
-You'll have to change the paths in `leelalite.sh` to reflect your installation. See the next section for installation instructions.
+You'll have to change the paths in `leelalite.sh` to reflect your installation. See the next section
+for installation instructions.
 
-Also, there's a LRU nn eval cache (thanks @Trevor) and lazy instantiation that make leela_lite run a whole lot faster.
+Also, there's a LRU nn eval cache (thanks @Trevor) and lazy instantiation that make leela_lite run a
+whole lot faster.
+
+## NN Network Server
+
+TBD
 
 ## Quickstart
 
 - setup a python virtual environment with python3
-- clone the mcts branch of https://github.com/dkappe/lczero_tools/tree/mcts
-- install so you can edit `pip install -e.`
+- git clone the repo `https://github.com/so-much-meta/lczero_tools.git` and checkout the tag `0.1.0`
+- install so you can edit `pip install -e .`
 - run leela_lite with weights file and number of nodes: `python leela_lite.py weights_9149.txt.gz 200` (for example)
 
 Leela Lite will play a game against itself and spit out the pgn:
