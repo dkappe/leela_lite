@@ -21,9 +21,12 @@ TBD
 
 ## Quickstart
 
-- setup a python virtual environment with python3
+- make sure you have at least python 3.6 installed
+- setup a python virtual environment with python3.6+, for example: `virtualenv -p python3.6 ~/envs/lcztools`
+- load your virtual environment: `. ~/envs/lcztools/bin/activate`
+- install pytorch: `pip install torch torchvision`
 - git clone the repo `https://github.com/so-much-meta/lczero_tools.git` and checkout the tag `0.1.0`
-- install so you can edit `pip install -e .`
+- change dirs to the repo and install so you can edit `pip install -e .`
 - run leela_lite with weights file and number of nodes: `python leela_lite.py weights_9149.txt.gz 200` (for example)
 
 Leela Lite will play a game against itself and spit out the pgn:

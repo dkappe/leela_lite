@@ -62,7 +62,7 @@ def load_leela_network():
         net = load_network(backend='net_client', network_id=network_id, policy_softmax_temp=2.2)
     else:
         net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
-    nn = search.NeuralNet(net=net)
+    nn = search.NeuralNet(net=net, lru_size=max(5000, nodes))
 
 
 send("Leela Lite")

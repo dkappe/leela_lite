@@ -10,7 +10,7 @@ weights = sys.argv[1]
 board = LeelaBoard()
 
 net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
-nn = search.NeuralNet(net=net)
+nn = search.NeuralNet(net=net, lru_size=5000)
 NODES = 10000
 
 def do_nn():
