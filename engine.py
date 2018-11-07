@@ -40,13 +40,21 @@ def process_position(tokens):
 
     return board
 
-if len(sys.argv) != 3:
+if len(sys.argv) == 3:
+    weights = sys.argv[1]
+    nodes = int(sys.argv[2])
+    type = "uct"
+elif len(sys.argv) == 4:
+    weights = sys.argv[1]
+    nodes = int(sys.argv[2])
+    if sys.argv[3] == 'minimax':
+        type = 'minimax'
+    else:
+        type = 'uct'
+else:
     print("Usage: python3 engine.py <weights file or network server ID> <nodes>")
     print(len(sys.argv))
     exit(1)
-else:
-    weights = sys.argv[1]
-    nodes = int(sys.argv[2])
 
 network_id = None
 try:
@@ -99,7 +107,10 @@ while True:
             my_nodes = int(tokens[2])
         if nn == None:
             load_leela_network()
-        best, node = search.UCT_search(board, my_nodes, net=nn, C=3.4)
+        if type == 'uct':
+            best, node = search.UCT_search(board, my_nodes, net=nn, C=3.4)
+        else:
+            best, node = search.MinMax_search(board, my_nodes, net=nn, C=3.4)
         send("bestmove {}".format(best))
 
 logfile.close()
