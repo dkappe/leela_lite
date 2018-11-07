@@ -8,35 +8,44 @@ import time
 
 
 if len(sys.argv) != 3:
-    print("Usage: python3 leela_lite.py <weights file> <nodes>")
+    print("Usage: python3 leela_lite.py <weights file or network server ID> <nodes>")
     print(len(sys.argv))
     exit(1)
 else:
     weights = sys.argv[1]
     nodes = int(sys.argv[2])
 
+network_id = None
+try:
+    # If the parameter is an integer, assume it's a network server ID
+    network_id = int(weights)
+    weights = None
+except:
+    pass
 
-board = LeelaBoard()
+def load_leela_network():
+    global net, nn
+    if network_id is not None:
+        net = load_network(backend='net_client', network_id=network_id, policy_softmax_temp=2.2)
+    else:
+        net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
+    nn = search.NeuralNet(net=net, lru_size=min(5000, nodes))
+    
 
-net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
-# net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=1.0)
-nn = search.NeuralNet(net=net)
-#policy, value = net.evaluate(board)
-#print(policy)
-#print(value)
-#print(uct.softmax(policy.values()))
+load_leela_network()
 
 SELFPLAY = True
 
+board = LeelaBoard()
 while True:
     if not SELFPLAY:
-        print(board)
+        print(board.unicode())
         print("Enter move: ", end='')
         sys.stdout.flush()
         line = sys.stdin.readline()
         line = line.rstrip()
         board.push_uci(line)
-    print(board)
+    print(board.unicode())
     print("thinking...")
     start = time.time()
     best, node = search.UCT_search(board, nodes, net=nn, C=3.4)
@@ -46,8 +55,12 @@ while True:
     print(nn.evaluate.cache_info())
     board.push_uci(best)
     if board.pc_board.is_game_over() or board.is_draw():
-        print("Game over... result is {}".format(board.pc_board.result(claim_draw=True)))
-        print(board)
-        print(chess.pgn.Game.from_board(board.pc_board))
+        result = board.pc_board.result(claim_draw=True)
+        print("Game over... result is {}".format(result))
+        print(board.unicode())
+        print()
+        pgn_game = chess.pgn.Game.from_board(board.pc_board) 
+        pgn_game.headers['Result'] = result
+        print(pgn_game)
         break
-
+    
