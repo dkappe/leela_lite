@@ -4,7 +4,7 @@ import lcztools
 from lcztools import LeelaBoard
 import chess
 from collections import OrderedDict
-
+import sys
 
 class UCTNode():
     def __init__(self, board=None, parent=None, move=None, prior=0):
@@ -16,8 +16,10 @@ class UCTNode():
         self.prior = prior  # float
         if parent == None:
             self.total_value = 0.  # float
+            self.ply = 0
         else:
             self.total_value = -1.0
+            self.ply = parent.ply + 1
         self.number_visits = 0  # int
 
     def Q(self):  # returns float
@@ -55,11 +57,16 @@ class UCTNode():
         while current.parent is not None:            
             current.number_visits += 1
             current.total_value += (value_estimate *
-                                    turnfactor)
+                                        turnfactor)
+
             current = current.parent
             turnfactor *= -1
         current.number_visits += 1
 
+    def info(self, move):
+        return "info string {} (X ) N:{} (+ X) (P:  {}%) (Q:  {}) (U: {}) (Q+U:  {}) (V:  X)".format(move, self.number_visits, round(self.prior*100, 2), round(self.Q(),5), round(self.U(),5), round(self.Q() + self.U(),5))
+
+    
     def dump(self, move, C):
         print("---")
         print("move: ", move)
@@ -73,20 +80,59 @@ class UCTNode():
         #      self.prior, self.number_visits))
         print("---")
 
-def UCT_search(board, num_reads, net=None, C=1.0):
+def scale_score(cp):
+    return (2/(1+math.exp(-0.004 * cp)) - 1)
+
+def material_eval(board):
+    eval = 0
+    eval = eval + 900*len(board.pieces(chess.QUEEN, chess.WHITE))
+    eval = eval + 500*len(board.pieces(chess.ROOK, chess.WHITE))
+    eval = eval + 325*len(board.pieces(chess.BISHOP, chess.WHITE))
+    eval = eval + 300*len(board.pieces(chess.KNIGHT, chess.WHITE))
+    eval = eval + 100*len(board.pieces(chess.PAWN, chess.WHITE))
+    eval = eval - 900*len(board.pieces(chess.QUEEN, chess.BLACK))
+    eval = eval - 500*len(board.pieces(chess.ROOK, chess.BLACK))
+    eval = eval - 325*len(board.pieces(chess.BISHOP, chess.BLACK))
+    eval = eval - 300*len(board.pieces(chess.KNIGHT, chess.BLACK))
+    eval = eval - 100*len(board.pieces(chess.PAWN, chess.BLACK))
+    return eval
+
+def adjust_value(value, ratio, board):
+
+    #sys.stderr.write(board.unicode())
+    #sys.stderr.write("\n")
+    #sys.stderr.write("value={}\n".format(value))
+
+    material = material_eval(board)
+    #sys.stderr.write("material={}\n".format(material))
+    # TODO adjust by -1 if black to move
+    if board.turn == chess.BLACK:
+        material = -material
+    material = scale_score(material)
+    #sys.stderr.write("adjust={}\n".format(material))
+    #sys.stderr.flush()
+    return (1.0-ratio)*value + ratio*material
+
+def UCT_search(board, num_reads, net=None, C=1.0, material_ratio=0.0, stats=False):
     assert(net != None)
     root = UCTNode(board)
     for _ in range(num_reads):
         leaf = root.select_leaf(C)
         child_priors, value_estimate = net.evaluate(leaf.board)
+        value_estimate = adjust_value(value_estimate, material_ratio, leaf.board.pc_board)
         leaf.expand(child_priors)
         leaf.backup(value_estimate)
 
-    #for m, node in sorted(root.children.items(),
-    #                      key=lambda item: (item[1].number_visits, item[1].Q())):
-    #    node.dump(m, C)
+    if stats:
+        for m, node in sorted(root.children.items(),
+                              key=lambda item: (item[1].number_visits, item[1].Q())):
+            print(node.info(m))
+            sys.stdout.flush()
+            
     return max(root.children.items(),
                key=lambda item: (item[1].number_visits, item[1].Q()))
+
+
 
 
 
