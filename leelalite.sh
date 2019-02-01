@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIR="/home/dkappe/work/src/leela_lite"
+DIR="/home/dkappe/deep1/src/leela_lite"
 
 . ~/envs/lcztools/bin/activate
 

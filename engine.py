@@ -108,9 +108,9 @@ while True:
         if nn == None:
             load_leela_network()
         if type == 'uct':
-            best, node = search.UCT_search(board, my_nodes, net=nn, C=3.4)
+            best, node = search.UCT_search(board, my_nodes, net=nn, C=3.0)
         else:
-            best, node = search.MinMax_search(board, my_nodes, net=nn, C=3.4)
+            best, node = search.MinMax_search(board, my_nodes, net=nn, C=3.0)
         send("bestmove {}".format(best))
 
 logfile.close()
