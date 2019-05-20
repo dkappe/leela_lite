@@ -1,8 +1,8 @@
-from lcztools import load_network, LeelaBoard
+from lcztools import LeelaBoard, list_backends
 import search
-import chess
-import chess.pgn
 import sys
+
+from leela_lite import get_search_algos
 
 logfile = open("leelalite.log", "w")
 LOG = False
@@ -40,77 +40,56 @@ def process_position(tokens):
 
     return board
 
-if len(sys.argv) == 3:
-    weights = sys.argv[1]
-    nodes = int(sys.argv[2])
-    type = "uct"
-elif len(sys.argv) == 4:
-    weights = sys.argv[1]
-    nodes = int(sys.argv[2])
-    if sys.argv[3] == 'minimax':
-        type = 'minimax'
-    else:
-        type = 'uct'
-else:
-    print("Usage: python3 engine.py <weights file or network server ID> <nodes>")
-    print(len(sys.argv))
-    exit(1)
+def uci(args):
+    from leela_lite import load_leela_network
 
-network_id = None
-try:
-    # If the parameter is an integer, assume it's a network server ID
-    network_id = int(weights)
-    weights = None
-except:
-    pass
+    send("Leela Lite")
+    board = LeelaBoard()
 
-def load_leela_network():
-    global net, nn
-    if network_id is not None:
-        net = load_network(backend='net_client', network_id=network_id, policy_softmax_temp=2.2)
-    else:
-        net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
-    nn = search.NeuralNet(net=net, lru_size=max(5000, nodes))
+    nodes = args.nodes
+    net = load_leela_network(args.weights, args.backend)
+    nn = search.NeuralNet(net=net, lru_size=min(5000, nodes))
 
+    search_func = get_search_algos()[args.algo]
 
-send("Leela Lite")
-board = LeelaBoard()
-net = None
-nn = None
+    while True:
+        line = sys.stdin.readline()
+        line = line.rstrip()
+        log("<{}".format(line))
+        tokens = line.split()
+        if len(tokens) == 0:
+            continue
 
+        if tokens[0] == "uci":
+            send('id name Leela Lite')
+            send('id author Dietrich Kappe')
+            send('uciok')
+        elif tokens[0] == "quit":
+            exit(0)
+        elif tokens[0] == "isready":
+            send("readyok")
+        elif tokens[0] == "ucinewgame":
+            board = LeelaBoard()
+        elif tokens[0] == 'position':
+            board = process_position(tokens)
+        elif tokens[0] == 'go':
+            my_nodes = nodes
+            if (len(tokens) == 3) and (tokens[1] == 'nodes'):
+                my_nodes = int(tokens[2])
+            best, node = search_func(board, my_nodes, net=nn, C=3.0)
+            send("bestmove {}".format(best))
 
+    logfile.close()
 
-while True:
-    line = sys.stdin.readline()
-    line = line.rstrip()
-    log("<{}".format(line))
-    tokens = line.split()
-    if len(tokens) == 0:
-        continue
+if __name__ == '__main__':
+    algos = get_search_algos().keys()
 
-    if tokens[0] == "uci":
-        send('id name Leela Lite')
-        send('id author Dietrich Kappe')
-        send('uciok')
-    elif tokens[0] == "quit":
-        exit(0)
-    elif tokens[0] == "isready":
-        load_leela_network()
-        send("readyok")
-    elif tokens[0] == "ucinewgame":
-        board = LeelaBoard()
-    elif tokens[0] == 'position':
-        board = process_position(tokens)
-    elif tokens[0] == 'go':
-        my_nodes = nodes
-        if (len(tokens) == 3) and (tokens[1] == 'nodes'):
-            my_nodes = int(tokens[2])
-        if nn == None:
-            load_leela_network()
-        if type == 'uct':
-            best, node = search.UCT_search(board, my_nodes, net=nn, C=3.0)
-        else:
-            best, node = search.MinMax_search(board, my_nodes, net=nn, C=3.0)
-        send("bestmove {}".format(best))
+    import argparse
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('weights', help='weights file or network server ID')
+    parser.add_argument('nodes', type=int, help='nodes per move')
+    parser.add_argument('-a', '--algo', default='uct', help='search algo to use', choices=algos)
+    parser.add_argument('-b', '--backend', default='pytorch_cuda', choices=list_backends(), help='nn backend')
 
-logfile.close()
+    args = parser.parse_args()
+    uci(args)
