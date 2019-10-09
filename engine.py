@@ -1,8 +1,8 @@
-from lcztools import load_network, LeelaBoard
 import search
 import chess
 import chess.pgn
 import sys
+
 
 logfile = open("leelalite.log", "w")
 LOG = False
@@ -20,7 +20,7 @@ def send(str):
     sys.stdout.flush()
 
 def process_position(tokens):
-    board = LeelaBoard()
+    board = chess.Board()
 
     offset = 0
 
@@ -28,7 +28,7 @@ def process_position(tokens):
         offset = 2
     elif tokens[1] == 'fen':
         fen = " ".join(tokens[2:8])
-        board = LeelaBoard(fen=fen)
+        board = chess.Board(fen=fen)
         offset = 8
 
     if offset >= len(tokens):
@@ -44,19 +44,11 @@ if len(sys.argv) == 3:
     weights = sys.argv[1]
     nodes = int(sys.argv[2])
     type = "uct"
-elif len(sys.argv) == 4:
-    weights = sys.argv[1]
-    nodes = int(sys.argv[2])
-    if sys.argv[3] == 'minimax':
-        type = 'minimax'
-    else:
-        type = 'uct'
 else:
     print("Usage: python3 engine.py <weights file or network server ID> <nodes>")
     print(len(sys.argv))
     exit(1)
 
-network_id = None
 try:
     # If the parameter is an integer, assume it's a network server ID
     network_id = int(weights)
@@ -64,17 +56,13 @@ try:
 except:
     pass
 
-def load_leela_network():
-    global net, nn
-    if network_id is not None:
-        net = load_network(backend='net_client', network_id=network_id, policy_softmax_temp=2.2)
-    else:
-        net = load_network(backend='pytorch_cuda', filename=weights, policy_softmax_temp=2.2)
-    nn = search.NeuralNet(net=net, lru_size=max(5000, nodes))
+def load_network():
+    global nn
+    nn = search.EPDLRUNet(search.MaterialNet(), 8000)
 
 
 send("Leela Lite")
-board = LeelaBoard()
+board = chess.Board()
 net = None
 nn = None
 
@@ -95,10 +83,10 @@ while True:
     elif tokens[0] == "quit":
         exit(0)
     elif tokens[0] == "isready":
-        load_leela_network()
+        load_network()
         send("readyok")
     elif tokens[0] == "ucinewgame":
-        board = LeelaBoard()
+        board = chess.Board()
     elif tokens[0] == 'position':
         board = process_position(tokens)
     elif tokens[0] == 'go':
@@ -106,11 +94,9 @@ while True:
         if (len(tokens) == 3) and (tokens[1] == 'nodes'):
             my_nodes = int(tokens[2])
         if nn == None:
-            load_leela_network()
-        if type == 'uct':
-            best, node = search.UCT_search(board, my_nodes, net=nn, C=3.0)
-        else:
-            best, node = search.MinMax_search(board, my_nodes, net=nn, C=3.0)
+            load_network()
+        best, node = search.UCT_search(board, my_nodes, net=nn, C=3.0)
+
         send("bestmove {}".format(best))
 
 logfile.close()
