@@ -10,10 +10,12 @@ class MaterialNet:
 
     @staticmethod
     def scale_score(cp):
+        # [-1,1]
         return (2/(1+math.exp(-0.004 * cp)) - 1)
 
     @staticmethod
     def norm_score(score):
+        # [0,1]
         return (score+1.0)/2.0
 
     def _material_eval(self, board : chess.Board):
@@ -33,9 +35,9 @@ class MaterialNet:
         move_val = len(moves)/50.0
 
         if board.turn:
-            return eval+move_val
+            return self.scale_score(eval+move_val)
         else:
-            return -eval+move_val
+            return self.scale_score(-eval+move_val)
 
     def evaluate(self, board : chess.Board):
         result = None
@@ -58,7 +60,8 @@ class MaterialNet:
 
         for m in moves:
             board2.push(m)
-            pre = (-self._material_eval(board2))+200.0
+            pre = self.norm_score(-self._material_eval(board2)) + random.uniform(0, 0.05)
+            #pre = random.random()+2.0
             board2.pop()
             policy[m.uci()] = pre
             total += pre
@@ -66,6 +69,6 @@ class MaterialNet:
         for m in moves:
             policy[m.uci()] = policy[m.uci()]/total
 
-        value = self.norm_score(self.scale_score(self._material_eval(board)))
+        value = self._material_eval(board)
 
         return policy, value
