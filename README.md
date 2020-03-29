@@ -1,6 +1,6 @@
 # new project a0lite
 
-This project has been supercede by a new project: [a0lite]().
+This project has been supercede by a new project: [a0lite](https://github.com/dkappe/a0lite).
 
 # leela_lite
 
