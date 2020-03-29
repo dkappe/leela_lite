@@ -1,3 +1,7 @@
+# new project a0lite
+
+This project has been supercede by a new project: [a0lite]().
+
 # leela_lite
 
 Very simple PUCT to experiment with leela networks in Python.
