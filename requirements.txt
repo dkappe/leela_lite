@@ -1,6 +1,6 @@
 -e git+https://github.com/so-much-meta/lczero_tools.git@0636285a63cc16c5d0f50bd6d35d9c3a19fb58d2#egg=lczero_tools
 numpy==1.15.4
-Pillow==5.3.0
+Pillow==9.0.0
 python-chess==0.23.10
 six==1.11.0
 torch==0.4.1
